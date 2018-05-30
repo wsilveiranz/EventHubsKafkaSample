@@ -10,4 +10,10 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="cacert.pem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
