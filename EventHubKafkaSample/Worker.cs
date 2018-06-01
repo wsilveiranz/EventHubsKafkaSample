@@ -11,26 +11,19 @@ namespace EventHubKafkaSample
 {
     class Worker
     {
-        public static async Task Producer()
+        public static async Task Producer(string brokerlist, string password, string topicname, string cacertlocation)
         {
             try
             {
-
-                string brokerList = ConfigurationManager.AppSettings["eventHubsNamespaceURL"];
-                string password = ConfigurationManager.AppSettings["eventHubsConnStr"];
-                string topicName = ConfigurationManager.AppSettings["eventHubName"];
-                string caCertLocation = ConfigurationManager.AppSettings["caCertLocation"];
-
-
                 var config = new Dictionary<string, object> {
-                    { "bootstrap.servers", brokerList },
+                    { "bootstrap.servers", brokerlist },
                     { "security.protocol","SASL_SSL" },
                     { "sasl.mechanism","PLAIN" },
-                    { "ssl.ca.location",caCertLocation },
                     { "sasl.username", "$ConnectionString"},
                     { "sasl.password", password },
+                    { "ssl.ca.location",cacertlocation },
                     { "broker.version.fallback ","0.10.0.0" },
-                    { "api.version.fallback.ms","0" }
+                    { "api.version.fallback.ms","0" },
                     { "debug", "security,broker,protocol" }
                 };
 
@@ -39,8 +32,8 @@ namespace EventHubKafkaSample
                     Console.WriteLine("Initiating Execution");
                     for (int x = 0; x < 100; x++)
                     {
-                        var msg = string.Format("This is a sample message - msg # {0} at {1}", x, DateTime.Now.ToString('yyyMMdd_HHmmSSfff'));
-                        var deliveryReport = await producer.ProduceAsync(topicName, null, msg);
+                        var msg = string.Format("This is a sample message - msg # {0} at {1}", x, DateTime.Now.ToString("yyyMMdd_HHmmSSfff"));
+                        var deliveryReport = await producer.ProduceAsync(topicname, null, msg);
                         Console.WriteLine(string.Format("Message {0} sent.", x));
                     }
                 }
@@ -49,6 +42,46 @@ namespace EventHubKafkaSample
             {
                 Console.WriteLine(string.Format("Exception Ocurred - {0}", e.Message));
             }
+        }
+
+        public static void Consumer(string brokerlist, string password, string consumergroup, string topicname, string cacertlocation)
+        {
+            
+
+            var config = new Dictionary<string, object> {
+                    { "bootstrap.servers", brokerlist },
+                    { "security.protocol","SASL_SSL" },
+                    { "sasl.mechanism","PLAIN" },
+                    { "sasl.username", "$ConnectionString"},
+                    { "sasl.password", password },
+                    { "ssl.ca.location",cacertlocation },
+                    { "broker.version.fallback ","0.10.0.0" },
+                    { "api.version.fallback.ms","0" },
+                    { "debug", "security,broker,protocol" },
+                    { "group.id", consumergroup },
+                    { "auto.commit.interval.ms", 5000 },
+                    { "auto.offset.reset", "earliest" }
+                };
+
+            using (var consumer = new Consumer<Null, string>(config, null, new StringDeserializer(Encoding.UTF8)))
+            {
+                consumer.OnMessage += (_, msg)
+                  => Console.WriteLine($"Read '{msg.Value}' from: {msg.TopicPartitionOffset}");
+
+                consumer.OnError += (_, error)
+                  => Console.WriteLine($"Error: {error}");
+
+                consumer.OnConsumeError += (_, msg)
+                  => Console.WriteLine($"Consume error ({msg.TopicPartitionOffset}): {msg.Error}");
+
+                consumer.Subscribe(topicname);
+
+                while (true)
+                {
+                    consumer.Poll(TimeSpan.FromMilliseconds(100));
+                }
+            }
+
         }
     }
 }
