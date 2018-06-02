@@ -12,7 +12,12 @@ namespace EventHubKafkaSample
             string topicName = ConfigurationManager.AppSettings["eventHubName"];
             string caCertLocation = ConfigurationManager.AppSettings["caCertLocation"];
 
+            Console.WriteLine("Initiating Producer");
+            Console.WriteLine("");
             Worker.Producer(brokerList, password, topicName, caCertLocation).Wait();
+            Console.WriteLine("Initiating Consumer");
+            Console.WriteLine("");
+            Worker.Consumer(brokerList, password, "testconsumergroup", topicName, caCertLocation);
             Console.ReadKey();
 
         }

@@ -22,15 +22,14 @@ namespace EventHubKafkaSample
                     { "sasl.username", "$ConnectionString"},
                     { "sasl.password", password },
                     { "ssl.ca.location",cacertlocation },
-                    { "broker.version.fallback ","0.10.0.0" },
-                    { "api.version.fallback.ms","0" },
+
                     { "debug", "security,broker,protocol" }
                 };
 
                 using (var producer = new Producer<Null, string>(config, null, new StringSerializer(Encoding.UTF8)))
                 {
                     Console.WriteLine("Initiating Execution");
-                    for (int x = 0; x < 100; x++)
+                    for (int x = 0; x < 10; x++)
                     {
                         var msg = string.Format("This is a sample message - msg # {0} at {1}", x, DateTime.Now.ToString("yyyMMdd_HHmmSSfff"));
                         var deliveryReport = await producer.ProduceAsync(topicname, null, msg);
@@ -55,12 +54,12 @@ namespace EventHubKafkaSample
                     { "sasl.username", "$ConnectionString"},
                     { "sasl.password", password },
                     { "ssl.ca.location",cacertlocation },
-                    { "broker.version.fallback ","0.10.0.0" },
-                    { "api.version.fallback.ms","0" },
                     { "debug", "security,broker,protocol" },
                     { "group.id", consumergroup },
                     { "auto.commit.interval.ms", 5000 },
-                    { "auto.offset.reset", "earliest" }
+                    { "auto.offset.reset", "earliest" },
+                    { "broker.version.fallback","0.10.0.0" },
+                    { "api.version.fallback.ms","0" }
                 };
 
             using (var consumer = new Consumer<Null, string>(config, null, new StringDeserializer(Encoding.UTF8)))
